@@ -6,4 +6,5 @@ torchvision
 transformers 
 scikit-learn 
 pillow
+pandas
 numpy==1.26.4

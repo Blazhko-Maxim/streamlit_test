@@ -6,6 +6,7 @@ from PIL import Image
 import numpy as np
 import requests
 import json
+import pandas as pd
 import torch
 import os
 from io import BytesIO
@@ -46,12 +47,34 @@ def load_sheet():
 
 sheet = load_sheet()
 
+def get_stats():
+    values = sheet.get_values("B:C", "COLUMNS")
+    df = pd.DataFrame({'Gender': values[0][1:], 'Style': values[1][1:]})
+    df.sort_values(['Gender', 'Style'], inplace=True)
+    stats = df.groupby(['Gender', 'Style']).size().reset_index(name='Count')
+    st.title("Statistics")
+    st.table(stats)
+    st.button("Back")
+    st.stop()
+
+
 # --- UI ---
 st.title("Outfit Duplicate Checker")
+st.button("Get Stats", on_click=get_stats)
 
 image_url = st.text_input("Image Path (URL)")
-gender = st.text_input("Gender")
-style = st.text_input("Style")
+gender = st.selectbox("Gender", ["Male", "Female"])
+if gender == "Male":
+    styles = [
+        "Casual", "Grunge", "Soft Aesthetics", "Old Money", "Vintage and Retro", 
+        "Minimalism", "Sporty", "Streetwear", "Workwear", "Y2K"
+    ]
+else:
+    styles = [
+        "Casual", "Chic and Classy", "Bohemian", "Elegant", "Gothic Aesthetics", "Artsy and Electric", 
+        "Minimalistic", "Romantic", "Sporty", "Streetwear", "Edgy", "Vintage and Retro"
+    ]
+style =  st.selectbox("Style", styles)
 credits = st.text_input("Credits")
 credits_link = st.text_input("Credits Link")
 
@@ -71,17 +94,15 @@ def get_image_embedding(image_url):
         return None
 
 def fetch_existing_embeddings():
-    records = sheet.get_all_records()
+    columns = [c[1:] for c in sheet.batch_get(["A:A", "G:G"])]
     embeddings = []
     urls = []
-    for row in records:
-        try:
-            emb = np.array(json.loads(row.get("Embedding")))
+    for url_row, emb_row in zip(columns[0], columns[1]):
+        if url_row and emb_row:
+            emb = np.array(json.loads(emb_row[0]))
             embeddings.append(emb)
-            urls.append(row.get("Image URL"))
-        except:
-            continue
-    return urls, np.array(embeddings), records
+            urls.append(url_row[0])
+    return urls, np.array(embeddings)
 
 def clicked():
     st.session_state["submit_anyway"] = True
@@ -108,7 +129,7 @@ if submit and image_url:
         if new_emb is None:
             st.stop()
 
-        urls, embeddings, records = fetch_existing_embeddings()
+        urls, embeddings = fetch_existing_embeddings()
 
         similar_urls = []
         if len(embeddings) > 0:
