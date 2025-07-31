@@ -42,7 +42,7 @@ def load_sheet():
         json.dump(creds, file)
     creds = ServiceAccountCredentials.from_json_keyfile_name('google_creds.json', scope)
     client = gspread.authorize(creds)
-    sheet = client.open("StyleApp test feed").sheet1
+    sheet = client.open("StyleApp MVP feed database").sheet1
     return sheet
 
 sheet = load_sheet()
