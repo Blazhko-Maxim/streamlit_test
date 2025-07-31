@@ -1,0 +1,9 @@
+streamlit 
+gspread 
+oauth2client 
+torch 
+torchvision 
+transformers 
+scikit-learn 
+pillow
+numpy==1.26.4
