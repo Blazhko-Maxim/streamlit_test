@@ -123,7 +123,7 @@ if st.session_state.get("submit_anyway", False):
     st.stop()
 
 # --- Submission ---
-if submit and image_url:
+if submit and image_url and credits and credits_link:
     with st.spinner("Checking for duplicates..."):
         new_emb = get_image_embedding(image_url)
         if new_emb is None:
@@ -162,3 +162,5 @@ if submit and image_url:
             ]
             sheet.append_row(new_row)
             st.success("Image submitted successfully!")
+elif submit:
+    st.error("Please provide all required fields.")
